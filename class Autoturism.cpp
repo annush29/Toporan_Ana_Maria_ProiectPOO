@@ -325,4 +325,20 @@ void main()
 		cout << vectorDinamic[i];
 	}
 	delete[]vectorDinamic;
+	//matrice statica de 4 pe 4
+Autoturism matrice[4][4];
+for (int i = 0; i < 4; i++)
+{
+	for (int j = 0; j < 4; j++)
+	{
+		cin >> matrice[i][j];
+	}
+}
+for (int i = 0; i < 4; i++)
+{
+	for (int j = 0; j < 4; j++)
+	{
+		cout<< matrice[i][j];
+	}
+}
 }
