@@ -1,12 +1,20 @@
 #include<iostream>
 #include<string>
-#pragma warning (disable:4996)
 #include <fstream>
+#pragma warning (disable:4996)
 using namespace std;
 
 //domeniul MIJLOC TRANSPORT
 
-class Autoturism
+
+class MijlocTransport
+{
+public:
+	virtual void informatieTransport() = 0;
+};
+
+
+class Autoturism :public MijlocTransport
 {
 private:
 	char* marca;
@@ -16,9 +24,13 @@ private:
 	static int numarTotalAutoturisme;
 
 public:
+	virtual void informatieTransport() 
+	{
+		cout << "Transportul se face cu autoturismul." << endl;
+	}
 
 	//afisare in fisier binar
-	void generareFisierBinar(ofstream& fout) 
+	void generareFisierBinar(ofstream& fout)
 	{
 		fout.write((char*)&this->anFabricatie, sizeof(int));
 
@@ -243,8 +255,117 @@ void afisare(Autoturism sursa)
 }
 
 
+class Taxi :public Autoturism
+{
+private:
+	char* sofer;
+	float pretPerKilometru;
 
-class Motocicleta
+public:
+	void informatieTransport() 
+	{
+		cout << "Transportul se face cu taxiul." << endl;
+	}
+
+	//constructor fara parametrii
+	Taxi()
+	{
+		this->sofer = new char[strlen("na") + 1];
+		strcpy(this->sofer, "na");
+		this->pretPerKilometru = 1.5;
+	}
+
+	//constructor cu toti parametrii
+	Taxi(const char* marca, int anFab, string cul, int nrRoti, const char* so, float pretK) :Autoturism(marca, anFab, cul, nrRoti)
+	{
+		this->sofer = new char[strlen(so) + 1];
+		strcpy(this->sofer, so);
+		this->pretPerKilometru = pretK;
+	}
+
+	//constructor de copiere
+	Taxi(const Taxi& sursa) :Autoturism(sursa)
+	{
+		this->sofer = new char[strlen(sursa.sofer) + 1];
+		strcpy(this->sofer, sursa.sofer);
+		this->pretPerKilometru = sursa.pretPerKilometru;
+	}
+
+	//operator =
+	Taxi& operator=(const Taxi& sursa)
+	{
+		Autoturism::operator=(sursa);
+
+		delete[] this->sofer;
+		this->sofer = new char[strlen(sursa.sofer) + 1];
+		strcpy(this->sofer, sursa.sofer);
+		this->pretPerKilometru = sursa.pretPerKilometru;
+		return *this;
+	}
+
+	//geteri
+	char* getSofer() 
+	{
+		return this->sofer;
+	}
+
+	float getPretKm() 
+	{
+		return this->pretPerKilometru;
+	}
+
+	//seteri
+	void setSofer(const char* soferNou)
+	{
+		if (strlen(soferNou) > 2) 
+		{
+			delete[] this->sofer;
+			this->sofer = new char[strlen(soferNou) + 1];
+			strcpy(this->sofer, soferNou);
+		}
+	}
+
+	void setPretKm(float p)
+	{
+		if (p > 0) 
+		{
+			this->pretPerKilometru = p;
+		}
+	}
+
+	//destructor
+	~Taxi() {
+		delete[] this->sofer;
+	}
+};
+
+
+class TransportPe2Roti
+{
+protected:
+	bool permis = 1;
+
+public:
+	virtual int getPermis() = 0;
+};
+
+
+class Bicicleta : public TransportPe2Roti
+{
+public:
+	int  getPermis() 
+	{
+		return this->permis;
+	}
+
+	Bicicleta() 
+	{
+		this->permis = 0;
+	}
+};
+
+
+class Motocicleta :public TransportPe2Roti
 {
 private:
 	char* numeProprietar;
@@ -255,9 +376,13 @@ private:
 	static bool cascaObligatorie;
 
 public:
+	int  getPermis() 
+	{
+		return this->permis;
+	}
 
 	//afisare in fisier binar
-	void generareFisierBinar(ofstream& fout) 
+	void generareFisierBinar(ofstream& fout)
 	{
 		fout.write((char*)&this->pret, sizeof(float));
 		fout.write((char*)&this->capacitateCilindrica, sizeof(int));
@@ -496,7 +621,89 @@ void reducerePret(Motocicleta& sursa, float sumaRed)
 }
 
 
-class Tren
+class MotocicletaCurse :public Motocicleta
+{
+private:
+	int nrCurse;
+	float* timpi;//timpul scos pe fiecare cursa
+
+public:
+	//constructor fara parametrii
+	MotocicletaCurse() {
+		this->nrCurse = 0;
+		this->timpi = NULL;
+	}
+
+	//constructor cu toti parametrii
+	MotocicletaCurse(const char* nume, float pret, string model, int capacitate, string tip, int nr, float* ti) :Motocicleta(nume, pret, model, capacitate, tip)
+	{
+		this->nrCurse = nr;
+		this->timpi = new float[nr];
+		for (int i = 0; i < nr; i++) 
+		{
+			this->timpi[i] = ti[i];
+		}
+	}
+
+	//constructor de copiere
+	MotocicletaCurse(const MotocicletaCurse& sursa) :Motocicleta(sursa)
+	{
+		this->nrCurse = sursa.nrCurse;
+		this->timpi = new float[sursa.nrCurse];
+		for (int i = 0; i < sursa.nrCurse; i++) 
+		{
+			this->timpi[i] = sursa.timpi[i];
+		}
+	}
+
+	//operator =
+	MotocicletaCurse& operator= (const MotocicletaCurse& sursa)
+	{
+		Motocicleta::operator=(sursa);
+		delete[] this->timpi;
+		this->nrCurse = sursa.nrCurse;
+		this->timpi = new float[sursa.nrCurse];
+		for (int i = 0; i < sursa.nrCurse; i++) 
+		{
+			this->timpi[i] = sursa.timpi[i];
+		}
+		return *this;
+	}
+
+	//geteri
+	int getNrCurse() 
+	{
+		return this->nrCurse;
+	}
+
+	float* getTimpi() 
+	{
+		return this->timpi;
+	}
+
+	//seteri
+	void setTimpi(int nr, float* ti) 
+	{
+		if (nr > 0) {
+			delete[] this->timpi;
+			this->nrCurse = nr;
+			this->timpi = new float[nr];
+			for (int i = 0; i < nr; i++) 
+			{
+				this->timpi[i] = ti[i];
+			}
+		}
+	}
+
+	//destructor
+	~MotocicletaCurse() 
+	{
+		delete[] this->timpi;
+	}
+};
+
+
+class Tren :public MijlocTransport
 {
 private:
 	string companieFeroviara;
@@ -507,6 +714,10 @@ private:
 	static int vitezaMaximaStandard;
 
 public:
+	void informatieTransport() 
+	{
+		cout << "Transportul se face cu trenul." << endl;
+	}
 
 	friend ofstream& operator<<(ofstream& out, const Tren& sursa)
 	{
@@ -747,8 +958,8 @@ class Gara
 private:
 	string locatie;
 	int nrPeroane;
-	int nrTrenuri; 
-	Tren* trenuri; 
+	int nrTrenuri;
+	Tren* trenuri;
 
 public:
 
@@ -979,11 +1190,77 @@ public:
 	}
 
 	//destructor
-	~Gara() {
+	~Gara() 
+	{
 		delete[] this->trenuri;
 	}
-
 };
+
+
+class AplicatieTransport 
+{
+private:
+	int nrMijloaceTransport;
+	MijlocTransport** mijloace;
+
+public:
+	//constructor fara parametrii
+	AplicatieTransport() 
+	{
+		nrMijloaceTransport = 0;
+		mijloace = NULL;
+	}
+
+	//constructor cu toti parametrii
+	AplicatieTransport(int nr, MijlocTransport** mj)
+	{
+		nrMijloaceTransport = nr;
+		mijloace = new MijlocTransport * [nr];
+		for (int i = 0; i < nr; i++) 
+		{
+			this->mijloace[i] = mj[i];
+		}
+	}
+
+	//constructor de copiere
+	AplicatieTransport(const AplicatieTransport& sursa)
+	{
+		nrMijloaceTransport = sursa.nrMijloaceTransport;
+		mijloace = new MijlocTransport * [nrMijloaceTransport];
+		for (int i = 0; i < nrMijloaceTransport; i++) 
+		{
+			this->mijloace[i] = sursa.mijloace[i];
+		}
+	}
+
+	//operator =
+	AplicatieTransport& operator=(const AplicatieTransport& sursa)
+	{
+		delete[] this->mijloace;
+		nrMijloaceTransport = sursa.nrMijloaceTransport;
+		mijloace = new MijlocTransport * [nrMijloaceTransport];
+		for (int i = 0; i < nrMijloaceTransport; i++) 
+		{
+			this->mijloace[i] = sursa.mijloace[i];
+		}
+		return *this;
+	}
+
+	void afisareTransporturi()
+	{
+		for (int i = 0; i < this->nrMijloaceTransport; i++) 
+		{
+			this->mijloace[i]->informatieTransport();
+		}
+	}
+
+	//destructor
+	~AplicatieTransport()
+	{
+		delete[] this->mijloace;
+	}
+};
+
 
 void main()
 {
@@ -1077,7 +1354,7 @@ void main()
 	//cin >> a1;
 
 	//vector dinamic
-	
+
 	//Autoturism* vectorDinamic;
 	//int nrAutoturisme ;
 	//cout << "Numarul de autoturisme este: ";
@@ -1310,13 +1587,13 @@ void main()
 	Tren trenvector[2]{ t1, t2 };
 
 	Gara g;
-	
+
 	Gara g1("Bucuresti", 3, 2, trenvector);
-	
+
 	Gara g2(g1);
-	
+
 	g = g1;
-	
+
 	//seteri
 	g1.setLocatie("Buzau");
 	g1.setNrPeroane(5);
@@ -1327,7 +1604,7 @@ void main()
 	//cout << g1.getNrPeroane() << endl;
 	//cout << g1.getNrTrenuri() << endl;
 
-	for (int i = 0; i < g1.getNrTrenuri(); i++) 
+	for (int i = 0; i < g1.getNrTrenuri(); i++)
 	{
 		// cout << g1.getTrenuri()[i] << endl;
 	}
@@ -1339,7 +1616,7 @@ void main()
 
 	ofstream fout;
 	fout.open("fisierbinarAutotursim.bin", ofstream::binary);
-	if (fout.is_open()) 
+	if (fout.is_open())
 	{
 		a1.generareFisierBinar(fout);
 		fout.close();
@@ -1349,7 +1626,7 @@ void main()
 
 	ifstream fin;
 	fin.open("fisierbinarAutotursim.bin", ifstream::binary);
-	if (fin.is_open()) 
+	if (fin.is_open())
 	{
 		adf.citireFisierBinar(fin);
 		fin.close();
@@ -1361,7 +1638,7 @@ void main()
 
 	ofstream fout1;
 	fout1.open("fisierbinarMoto.bin", ofstream::binary);
-	if (fout1.is_open()) 
+	if (fout1.is_open())
 	{
 		m1.generareFisierBinar(fout1);
 		fout1.close();
@@ -1371,7 +1648,7 @@ void main()
 
 	ifstream fin1;
 	fin1.open("fisierbinarMoto.bin", ifstream::binary);
-	if (fin1.is_open()) 
+	if (fin1.is_open())
 	{
 		mdf.citireFisierBinar(fin1);
 		fin1.close();
@@ -1385,7 +1662,7 @@ void main()
 
 	ofstream fout2;
 	fout2.open("fisierbinarGara.txt", ofstream::out);
-	if (fout2.is_open()) 
+	if (fout2.is_open())
 	{
 		fout2 << g1;
 		fout2.close();
@@ -1395,7 +1672,7 @@ void main()
 
 	ifstream fin2;
 	fin2.open("fisierbinarGara.txt", ifstream::in);
-	if (fin2.is_open()) 
+	if (fin2.is_open())
 	{
 		fin2 >> gdf;
 		fin2.close();
@@ -1403,5 +1680,48 @@ void main()
 
 	//cout << gdf;
 
+	//FAZA 7 
+
+	Taxi tx;
+	Taxi tx1("Honda", 2010, "rosie", 4, "Marius", 2.3);
+	Taxi tx2(tx1);
+	tx = tx1;
+	tx.setSofer("Ionut");
+	tx.setPretKm(2.4);
+	//cout << tx.getSofer() << ", " << tx.getPretKm() << endl;
+
+	MotocicletaCurse mc;
+	MotocicletaCurse mc1("Maria", 6000, "Turbo sistem", 400, "nou", 3, new float[3]{10, 232, 43 });
+	MotocicletaCurse mc2(mc1);
+	mc = mc1;
+	mc1.setTimpi(3, new float[3]{10, 11, 12});
+	//cout << mc.getNrCurse() << endl;
+	for (int i = 0; i < mc.getNrCurse(); i++) 
+	{
+		//cout << mc.getTimpi()[i] << endl;
+	}
+
+	//UPCASTING-construim o motocicleta pe baza unei motocilete de curse
+	Motocicleta mot((Motocicleta)mc1); 
+
+	//FAZA 8 
+	//late binding
+	MijlocTransport* mjt[10] = { &t1, &t2, &t3, &tx1, &tx, &tx2, &a, &a1, &a2, &a3 };
+	for (int i = 0; i < 10; i++) 
+	{
+		mjt[i]->informatieTransport();
+	}
+
+	Bicicleta bici;
+	TransportPe2Roti* tp2[3] = { &mc1, &m1, &bici };
+	for (int i = 0; i < 3; i++) {
+		cout << tp2[i]->getPermis() << endl;
+	}
+
+	AplicatieTransport ap;
+	AplicatieTransport ap1(10, mjt);
+	AplicatieTransport ap2(ap1);
+	ap = ap1;
+	ap1.afisareTransporturi();
 }
 
